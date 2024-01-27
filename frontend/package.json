@@ -13,9 +13,7 @@
     "electron": "^28.2.0"
   },
   "dependencies": {
-    "@sinm/react-file-tree": "^1.1.1",
     "axios": "^1.6.7",
-    "electron-reload": "^2.0.0-alpha.1",
-    "react": "^18.2.0"
+    "electron-reload": "^2.0.0-alpha.1"
   }
 }
