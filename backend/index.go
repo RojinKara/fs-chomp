@@ -71,7 +71,7 @@ func main() {
 		return c.JSON(results)
 	})
 
-	app.Get("/images/:path", func(c *fiber.Ctx) error {
+	app.Get("/images", func(c *fiber.Ctx) error {
 		excludedFolders := []string{"node_modules", ".git", "Applications", "tmp"}
 
 		excludedFoldersHashset := hashset.New()
@@ -79,7 +79,7 @@ func main() {
 			excludedFoldersHashset.Add(excludedFolder)
 		}
 
-		path, _ := url.QueryUnescape(c.Params("path"))
+		path := "/Users/bhavya/Desktop"
 
 		results := imageWalk(path, excludedFoldersHashset)
 		return c.JSON(results)
@@ -175,15 +175,15 @@ func fileTree(directory string, excludedFolders *hashset.Set, excludedFiles *has
 			return nil
 		}
 
+		if strings.Count(path, string(os.PathSeparator)) > strings.Count(directory, string(os.PathSeparator))+1 {
+			return filepath.SkipDir
+		}
 		temp := &fileResult{
 			IsFile:   !info.IsDir(),
 			Name:     info.Name(),
 			FullPath: path,
 		}
 		results = append(results, *temp)
-		if strings.Count(path, string(os.PathSeparator)) > strings.Count(directory, string(os.PathSeparator))+1 {
-			return filepath.SkipDir
-		}
 		return nil
 	})
 
