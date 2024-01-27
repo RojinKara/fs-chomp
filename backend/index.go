@@ -71,8 +71,8 @@ func main() {
 		return c.JSON(results)
 	})
 
-	app.Get("/images/:folderExclude", func(c *fiber.Ctx) error {
-		excludedFolders := strings.Split(c.Params("folderExclude"), ",")
+	app.Get("/images/:path", func(c *fiber.Ctx) error {
+		excludedFolders := []string{"node_modules", ".git", "Applications", "tmp"}
 
 		excludedFoldersHashset := hashset.New()
 		for _, excludedFolder := range excludedFolders {
@@ -198,10 +198,14 @@ func imageWalk(directory string, excludedFolders *hashset.Set) []string {
 	err := filepath.WalkDir(directory,
 		func(path string, d fs.DirEntry, err error) error {
 			if err != nil {
-				return err
+				return filepath.SkipDir
 			}
 
 			if IsExcluded(d.Name(), excludedFolders) {
+				return filepath.SkipDir
+			}
+
+			if d.IsDir() && strings.HasPrefix(d.Name(), ".") {
 				return filepath.SkipDir
 			}
 
