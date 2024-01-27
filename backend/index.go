@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/emirpasic/gods/sets/hashset"
 	"github.com/gofiber/fiber/v2"
-	"github.com/lithammer/fuzzysearch/fuzzy"
 	"github.com/sourcegraph/conc/iter"
 	"io/fs"
 	"log"
@@ -17,9 +16,10 @@ import (
 )
 
 type result struct {
-	File    string   `json:"file"`
-	RelPath string   `json:"relPath"`
-	Line    []string `json:"line"`
+	File       string `json:"file"`
+	RelPath    string `json:"relPath"`
+	Line       string `json:"line"`
+	LineNumber int    `json:"lineNumber"`
 }
 
 type fileResult struct {
@@ -135,18 +135,18 @@ func fileWalk(directory string, excludedFolders *hashset.Set, excludedFiles *has
 			}
 
 			if isText {
-				matches := fuzzy.Find(search, fileLines)
-				relFilePath, _ := filepath.Rel(directory, fileP)
-
-				if len(matches) > 0 {
-					result := &result{
-						File:    fileP,
-						RelPath: relFilePath,
-						Line:    matches,
+				for i, line := range fileLines {
+					if strings.Contains(strings.ToLower(line), strings.ToLower(search)) {
+						relFilePath, _ := filepath.Rel(directory, fileP)
+						results = append(results, result{
+							File:       fileP,
+							RelPath:    relFilePath,
+							Line:       line,
+							LineNumber: i + 1,
+						})
 					}
-					results = append(results, *result)
 				}
-
+				//matches := fuzzy.Find(search, fileLines)
 			}
 
 			err = readFile.Close()
