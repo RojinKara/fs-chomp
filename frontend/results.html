@@ -4,10 +4,20 @@
     <meta charset="UTF-8">
     <title>Result</title>
     <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/flowbite.min.css" rel="stylesheet" />
+    <link rel='stylesheet' href='./public/main.css'/>
 </head>
 <body>
-<h1>Hello World!</h1>
+<h1>Results</h1>
 <p>
+<!--    button to go back-->
+    <button id = "back-button" type="submit" class="text-white absolute end-2.5 bottom-2.5 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Back</button>
 </p>
 </body>
+<script>
+    document.getElementById("back-button").addEventListener("click", function(event){
+        event.preventDefault()
+        window.location.href = "index.html";
+    });
+</script>
 </html>
