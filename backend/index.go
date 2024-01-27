@@ -22,8 +22,9 @@ type result struct {
 }
 
 type fileResult struct {
-	IsFile bool   `json:"isFile"`
-	Name   string `json:"name"`
+	IsFile   bool   `json:"isFile"`
+	Name     string `json:"name"`
+	FullPath string `json:"fullPath"`
 }
 
 func main() {
@@ -67,6 +68,20 @@ func main() {
 		path, _ := url.QueryUnescape(c.Params("path"))
 
 		results := fileTree(path, excludedFoldersHashset, excludedFilesHashset)
+		return c.JSON(results)
+	})
+
+	app.Get("/images/:folderExclude", func(c *fiber.Ctx) error {
+		excludedFolders := strings.Split(c.Params("folderExclude"), ",")
+
+		excludedFoldersHashset := hashset.New()
+		for _, excludedFolder := range excludedFolders {
+			excludedFoldersHashset.Add(excludedFolder)
+		}
+
+		path, _ := url.QueryUnescape(c.Params("path"))
+
+		results := imageWalk(path, excludedFoldersHashset)
 		return c.JSON(results)
 	})
 
@@ -161,8 +176,9 @@ func fileTree(directory string, excludedFolders *hashset.Set, excludedFiles *has
 		}
 
 		temp := &fileResult{
-			IsFile: !info.IsDir(),
-			Name:   info.Name(),
+			IsFile:   !info.IsDir(),
+			Name:     info.Name(),
+			FullPath: path,
 		}
 		results = append(results, *temp)
 		if strings.Count(path, string(os.PathSeparator)) > strings.Count(directory, string(os.PathSeparator))+1 {
@@ -175,4 +191,27 @@ func fileTree(directory string, excludedFolders *hashset.Set, excludedFiles *has
 		panic(err)
 	}
 	return results
+}
+
+func imageWalk(directory string, excludedFolders *hashset.Set) []string {
+	var files []string
+	err := filepath.WalkDir(directory,
+		func(path string, d fs.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+
+			if IsExcluded(d.Name(), excludedFolders) {
+				return filepath.SkipDir
+			}
+
+			if !d.IsDir() && (filepath.Ext(path) == ".png" || filepath.Ext(path) == ".jpg" || filepath.Ext(path) == ".jpeg") {
+				files = append(files, path)
+			}
+			return nil
+		})
+	if err != nil {
+		panic(err)
+	}
+	return files
 }
