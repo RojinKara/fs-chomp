@@ -1,3 +1,5 @@
+const axios = require('axios');
+
 window.addEventListener('DOMContentLoaded', () => {
     const replaceText = (selector, text) => {
         const element = document.getElementById(selector)
@@ -7,4 +9,9 @@ window.addEventListener('DOMContentLoaded', () => {
     for (const type of ['chrome', 'node', 'electron']) {
         replaceText(`${type}-version`, process.versions[type])
     }
+    replaceText('path', process.cwd()); //current directory
+    
+    axios.get(`http://localhost:6969/${"."}/<empty>/<empty>/window`).then((response) => {
+        replaceText('files', response.data);
+    })
 })
