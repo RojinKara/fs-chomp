@@ -22,8 +22,8 @@ type result struct {
 }
 
 type fileResult struct {
-	Path string `json:"path"`
-	File string `json:"file"`
+	IsFile bool   `json:"isFile"`
+	Name   string `json:"name"`
 }
 
 func main() {
@@ -143,39 +143,36 @@ func fileWalk(directory string, excludedFolders *hashset.Set, excludedFiles *has
 }
 
 func fileTree(directory string, excludedFolders *hashset.Set, excludedFiles *hashset.Set) []fileResult {
-	var files []string
 	var results []fileResult
-	err := filepath.WalkDir(directory,
-		func(path string, d fs.DirEntry, err error) error {
-			if err != nil {
-				return err
-			}
+	err := filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
 
-			if IsExcluded(d.Name(), excludedFolders) {
-				return filepath.SkipDir
-			}
-			if IsExcludedFile(d.Name(), excludedFiles) {
-				return nil
-			}
-			if !d.IsDir() {
-				files = append(files, path)
-			}
+		if IsExcluded(info.Name(), excludedFolders) {
+			return filepath.SkipDir
+		}
+		if IsExcludedFile(info.Name(), excludedFiles) {
 			return nil
-		})
+		}
+		relFile, _ := filepath.Rel(directory, path)
+		if relFile == "." {
+			return nil
+		}
+
+		temp := &fileResult{
+			IsFile: !info.IsDir(),
+			Name:   info.Name(),
+		}
+		results = append(results, *temp)
+		if strings.Count(path, string(os.PathSeparator)) > strings.Count(directory, string(os.PathSeparator))+1 {
+			return filepath.SkipDir
+		}
+		return nil
+	})
+
 	if err != nil {
 		panic(err)
 	}
-
-	iter.ForEach(files,
-		func(file *string) {
-			fileP := strings.Clone(*file)
-			relFileP, _ := filepath.Rel(directory, fileP)
-			baseFileP := filepath.Base(fileP)
-			result := &fileResult{
-				Path: relFileP,
-				File: baseFileP,
-			}
-			results = append(results, *result)
-		})
 	return results
 }
