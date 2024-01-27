@@ -17,8 +17,9 @@ import (
 )
 
 type result struct {
-	File string   `json:"file"`
-	Line []string `json:"line"`
+	File    string   `json:"file"`
+	RelPath string   `json:"relPath"`
+	Line    []string `json:"line"`
 }
 
 type fileResult struct {
@@ -135,11 +136,13 @@ func fileWalk(directory string, excludedFolders *hashset.Set, excludedFiles *has
 
 			if isText {
 				matches := fuzzy.Find(search, fileLines)
+				relFilePath, _ := filepath.Rel(directory, fileP)
 
 				if len(matches) > 0 {
 					result := &result{
-						File: fileP,
-						Line: matches,
+						File:    fileP,
+						RelPath: relFilePath,
+						Line:    matches,
 					}
 					results = append(results, *result)
 				}
