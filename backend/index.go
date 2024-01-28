@@ -2,17 +2,22 @@ package main
 
 import (
 	"bufio"
+	"context"
+	"errors"
 	"fmt"
 	"github.com/emirpasic/gods/sets/hashset"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/redis/go-redis/v9"
 	"github.com/sourcegraph/conc/iter"
 	"io/fs"
 	"log"
 	"net/url"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 	"unicode/utf8"
 )
 
@@ -30,6 +35,17 @@ type fileResult struct {
 }
 
 func main() {
+	go func() {
+		for range time.Tick(60 * time.Second) {
+			cmd := exec.Command("py", "index.py")
+			_, err := cmd.Output()
+
+			if err != nil {
+				fmt.Println(err.Error())
+				return
+			}
+		}
+	}()
 	app := fiber.New()
 
 	app.Use(cors.New())
@@ -83,7 +99,7 @@ func main() {
 			excludedFoldersHashset.Add(excludedFolder)
 		}
 
-		path := "/Users/bhavya/Desktop"
+		path := "C:\\Users\\camde\\Documents"
 
 		results := imageWalk(path, excludedFoldersHashset)
 		return c.JSON(results)
@@ -95,6 +111,13 @@ func main() {
 func fileWalk(directory string, excludedFolders *hashset.Set, excludedFiles *hashset.Set, search string) []result {
 	var files []string
 	var results []result
+	var ctx = context.Background()
+
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     "redis-16811.c327.europe-west1-2.gce.cloud.redislabs.com:16811",
+		Password: "91Nbl6HUwwLaOhoVRms77gzlYVLs7RnU",
+	})
+
 	err := filepath.WalkDir(directory,
 		func(path string, d fs.DirEntry, err error) error {
 			if err != nil {
@@ -158,6 +181,22 @@ func fileWalk(directory string, excludedFolders *hashset.Set, excludedFiles *has
 			}
 			ext := filepath.Ext(fileP)
 			switch ext {
+			case ".png", ".jpg", ".jpeg":
+				val, err := rdb.Get(ctx, fileP).Result()
+				if errors.Is(err, redis.Nil) {
+				} else if err != nil {
+					panic(err)
+				} else {
+					if strings.Contains(strings.ToLower(val), strings.ToLower(search)) {
+						relFilePath, _ := filepath.Rel(directory, fileP)
+						results = append(results, result{
+							File:       fileP,
+							RelPath:    relFilePath,
+							Line:       val,
+							LineNumber: 0,
+						})
+					}
+				}
 			}
 		})
 	return results

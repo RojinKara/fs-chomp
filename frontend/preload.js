@@ -16,10 +16,11 @@ window.addEventListener('DOMContentLoaded', () => {
 
         axios.get(`http://localhost:6969/search/${localStorage.getItem("directory")}/node_modules,.git,.idea,.vscode,__pycache__/.gitignore,.xml/${search}`).then((response) => {
             if (response == null) {
-                document.createElement('h1').innerText = "No results found";
+                document.querySelector('body').appendChild(document.createElement('h1').innerText = "No results found");
                 return;
             }
             const table = document.createElement('table');
+            table.classList.add("w-3/5")
             /*adds a row for each row of data*/
             for (let i = 0; i < response.data.length; i++) {
                 let row = document.createElement('tr');
@@ -30,12 +31,18 @@ window.addEventListener('DOMContentLoaded', () => {
                 // lineNumber.innerText = response.data[i].lineNumber;
                 /*relative path to search*/
                 let relativePath = document.createElement('td');
-                relativePath.innerText = response.data[i].relPath;
+                let div = document.createElement("div")
+                div.innerHTML = `<div class="block w-full p-6 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700">
+
+<h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">${response.data[i].file}</h5>
+<h6 class="font-normal text-gray-700 dark:text-gray-400">${response.data[i].line}</h6>
+</div>`;
+                relativePath.appendChild(div)
                 /*line containing match*/
-                let line = document.createElement('td');
-                line.innerText = response.data[i].line;
+                //let line = document.createElement('td');
+                //line.innerText = response.data[i].line;
                 row.appendChild(relativePath);
-                row.appendChild(line);
+                //row.appendChild(line);
                 table.appendChild(row);
             }
             document.querySelector('body').appendChild(table);
@@ -50,8 +57,9 @@ window.addEventListener('DOMContentLoaded', () => {
             let table = document.createElement('table');
             /*add a go to parent directory*/
             let row = document.createElement('tr');
+            row.classList.add("my-4", "cursor-pointer")
             let icon = document.createElement('td');
-            icon.innerHTML = '<img class = "icon" src = "./public/arrow-left.svg" alt="Go back">';
+            icon.innerHTML = '<img class = "icon mx-2" src = "./public/arrow-left.svg" alt="Go back">';
             let dot = document.createElement('td');
             dot.innerText = '..';
             row.addEventListener('click', () => {
@@ -79,19 +87,19 @@ window.addEventListener('DOMContentLoaded', () => {
                 /*icons for the current directory*/
                 if (!response.data[i].isFile) {
                     /*adds a clickable to directories only*/
-                    isFile.innerHTML = '<img class = "icon" src = "./public/folder.svg" alt="Folder">';
+                    isFile.innerHTML = '<img class = "icon mx-2" src = "./public/folder.svg" alt="Folder">';
                     row.addEventListener('click', () => {
                         localStorage.setItem("directory", encodeURIComponent(response.data[i].fullPath));
                         window.location.reload();
                     })
                 } else {
-                    isFile.innerHTML = '<img class = "icon" src = "./public/file-text.svg" alt="File">';
+                    isFile.innerHTML = '<img class = "icon mx-2" src = "./public/file-text.svg" alt="File">';
                 }
                 row.appendChild(isFile);
                 row.appendChild(path);
                 table.appendChild(row);
             }
-            document.querySelector('body').appendChild(table);
+            document.querySelector('#load').appendChild(table);
         })
 
         // axios.get(`http://localhost:6969/search/C%3A%5CUsers%5Ccamde%5CDocuments%5Cfs-chomp/node_modules,.git/%3Cempty%3E/window`).then((response) => {

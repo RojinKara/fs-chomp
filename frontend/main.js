@@ -1,7 +1,11 @@
 const { app, BrowserWindow } = require('electron/main');
 const path = require('node:path');
+const exec = require('child_process').execFile;
 
-function createWindow () {
+exec('backend.exe', function(err, data) {})
+
+
+function createWindow() {
     const win = new BrowserWindow({
         width: 800,
         height: 600,
