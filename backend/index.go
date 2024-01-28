@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/emirpasic/gods/sets/hashset"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/sourcegraph/conc/iter"
 	"io/fs"
 	"log"
@@ -30,6 +31,8 @@ type fileResult struct {
 
 func main() {
 	app := fiber.New()
+
+	app.Use(cors.New())
 
 	app.Get("/search/:path/:folderExclude/:fileExclude/:search", func(c *fiber.Ctx) error {
 		excludedFolders := strings.Split(c.Params("folderExclude"), ",")
